@@ -89,7 +89,7 @@ export default function Home() {
     }
 
     const currentSignalsCount = tradingSignals.filter((signal) => {
-        const signalData = signal.BUY || signal.SELL
+        const signalData = signal
         return chartData.some((candle) => candle.closeTime === signalData?.candlestick.closeTime)
     }).length
 

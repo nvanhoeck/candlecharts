@@ -61,8 +61,7 @@ export const CandlestickChart = (props: {
     const data: StockData[] = props.data.map((stock) => {
         // Find if there's a trading signal for this timestamp
         const signal = props.tradingSignals.find((signal) => {
-            const signalData = signal.BUY || signal.SELL
-            return signalData?.candlestick.closeTime === stock.closeTime
+            return signal.candlestick.closeTime === stock.closeTime
         })
 
         const high = Number.parseFloat(stock.high)
@@ -77,7 +76,7 @@ export const CandlestickChart = (props: {
             high: stock.high,
             low: stock.low,
             highLow: [stock.high, stock.low],
-            signalType: signal ? (signal.BUY ? "BUY" : "SELL") : undefined,
+            signalType: signal ? signal.action : undefined,
             hasSignal: !!signal,
             signalPrice: signalPrice,
         }
@@ -104,8 +103,7 @@ export const CandlestickChart = (props: {
 
             // Check if this candlestick has a trading signal
             const signal = props.tradingSignals.find((signal) => {
-                const signalData = signal.BUY || signal.SELL
-                return signalData?.candlestick.closeTime === timestamp
+                return signal.candlestick.closeTime === timestamp
             })
 
             if (signal) {
@@ -174,8 +172,7 @@ export const CandlestickChart = (props: {
                             shape={(props: any) => <SignalArrow {...props} payload={entry} />}
                             onClick={() => {
                                 const signal = props.tradingSignals.find((signal) => {
-                                    const signalData = signal.BUY || signal.SELL
-                                    return signalData?.candlestick.closeTime === entry.timestamp
+                                    return signal.candlestick.closeTime === entry.timestamp
                                 })
                                 if (signal) props.onSignalClick(signal)
                             }}

@@ -1,9 +1,10 @@
 "use client"
 
 import {Bar, BarChart, Cell, ReferenceDot, Tooltip, XAxis, YAxis} from "recharts"
-import type {CandlestickData, TradingSignal} from "@/src/app/types"
+import type {CandlestickData, EnhancedTooltipData, TradingSignal} from "@/src/app/types"
 import {useCallback, useEffect, useRef, useState} from "react"
 import type {CategoricalChartFunc} from "recharts/types/chart/generateCategoricalChart"
+import CustomTooltip from "./CustomTooltip"
 
 type StockData = {
     time: string
@@ -54,6 +55,8 @@ export const CandlestickChart = (props: {
     selectTimestamp: (timestamp: number) => void
     tradingSignals: TradingSignal[]
     onSignalClick: (signal: TradingSignal) => void
+    enhancedTooltipData?: EnhancedTooltipData
+    showEnhancedTooltip?: boolean
 }) => {
     const data: StockData[] = props.data.map((stock) => {
         // Find if there's a trading signal for this timestamp
@@ -126,7 +129,11 @@ export const CandlestickChart = (props: {
             >
                 <XAxis dataKey="time" />
                 <YAxis type="number" domain={["dataMin", "dataMax"]} />
-                <Tooltip />
+                <Tooltip
+                    content={
+                        <CustomTooltip enhancedData={props.enhancedTooltipData} showEnhancedTooltip={props.showEnhancedTooltip} />
+                    }
+                />
 
                 {/* Main candlestick bars */}
                 <Bar dataKey="openClose">

@@ -27,6 +27,8 @@ export default function TradingSignalPopup({ isOpen, onClose, signal }: TradingS
                     <div className="bg-gray-50 p-4 rounded-lg">
                         <h3 className="font-semibold text-lg mb-3">Candlestick Data</h3>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+
+                            <div><span className="font-medium">Open Time:</span> {typeof signalData!.candlestick.openTime}</div>
                             <div><span className="font-medium">Open Time:</span> {new Date(signalData!.candlestick.openTime).toLocaleString()}</div>
                             <div><span className="font-medium">Close Time:</span> {new Date(signalData!.candlestick.closeTime).toLocaleString()}</div>
                             <div><span className="font-medium">Open:</span> {signalData!.candlestick.open}</div>

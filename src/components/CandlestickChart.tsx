@@ -1,7 +1,7 @@
 "use client"
 
-import {Bar, BarChart, Cell, ReferenceDot, Tooltip, XAxis, YAxis} from "recharts"
-import type {CandlestickData, EnhancedTooltipData, TradingSignal} from "@/src/app/types"
+import {Bar, BarChart, Cell, ReferenceDot, ReferenceLine, Tooltip, XAxis, YAxis} from "recharts"
+import type {CandlestickData, EnhancedTooltipData, SupportResistanceLevel, TradingSignal} from "@/src/app/types"
 import {useCallback, useEffect, useRef, useState} from "react"
 import type {CategoricalChartFunc} from "recharts/types/chart/generateCategoricalChart"
 import CustomTooltip from "./CustomTooltip"
@@ -57,6 +57,7 @@ export const CandlestickChart = (props: {
     onSignalClick: (signal: TradingSignal) => void
     enhancedTooltipData?: EnhancedTooltipData
     showEnhancedTooltip?: boolean
+    supportResistanceLevels?: SupportResistanceLevel[]
 }) => {
     const data: StockData[] = props.data.map((stock) => {
         // Find if there's a trading signal for this timestamp
@@ -132,6 +133,23 @@ export const CandlestickChart = (props: {
                         <CustomTooltip enhancedData={props.enhancedTooltipData} showEnhancedTooltip={props.showEnhancedTooltip} />
                     }
                 />
+
+                {/* Support and Resistance Lines */}
+                {props.supportResistanceLevels?.map((level, index) => (
+                    <ReferenceLine
+                        key={`sr-${index}`}
+                        y={level.price}
+                        stroke={level.type === "support" ? "#22c55e" : "#ef4444"}
+                        strokeWidth={Math.max(1, Math.min(level.touches / 4, 8))} // Scale touches to reasonable line width
+                        strokeDasharray={level.type === "support" ? "0" : "5 5"} // Solid for support, dashed for resistance
+                        label={{
+                            value: `${level.type.toUpperCase()}: ${level.price} (${level.touches} touches)`,
+                            position: 'insideTopRight',
+                            fontSize: 12,
+                            fill: level.type === "support" ? "#22c55e" : "#ef4444",
+                        }}
+                    />
+                ))}
 
                 {/* Main candlestick bars */}
                 <Bar dataKey="openClose">

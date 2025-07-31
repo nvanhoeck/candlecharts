@@ -35,6 +35,12 @@ export interface TradingSignal {
     }
 }
 
+export interface SupportResistanceLevel {
+    type: "support" | "resistance"
+    price: number
+    touches: number
+}
+
 
 export interface EnhancedTooltipData {
     [closeTime: string]: {
@@ -55,10 +61,4 @@ export interface EnhancedCandlestickData {
     baseAssetVolume: string
     quoteAssetVolume: string
     stateData: string
-    signalProbabilities: {
-        BUY: number
-        HOLD: number
-        SELL: number
-        WAIT: number
-    }
 }

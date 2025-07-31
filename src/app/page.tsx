@@ -4,12 +4,13 @@ import type React from "react"
 import {useEffect, useState} from "react"
 import {Button} from "../components/ui/button"
 import {Switch} from "../components/ui/switch"
-import {Info, PlusIcon, TrendingUp} from "lucide-react"
+import {BarChart3, Info, PlusIcon, TrendingUp} from "lucide-react"
 import JsonInputModal from "../components/JsonInputModal"
 import TradingSignalModal from "../components/TradingSignalModal"
 import TradingSignalPopup from "../components/TradingSignalPopup"
-import type {CandlestickData, EnhancedTooltipData, TradingSignal} from "../app/types"
+import type {CandlestickData, EnhancedTooltipData, SupportResistanceLevel, TradingSignal} from "../app/types"
 import {CandlestickChart} from "../components/CandlestickChart"
+import SupportResistanceModal from "../components/SupportResistanceModal";
 import EnhancedTooltipDataModal from "../components/EnhancedTooltipDataModel";
 
 export default function Home() {
@@ -17,9 +18,11 @@ export default function Home() {
     const [fullData, setFullData] = useState<CandlestickData[]>([])
     const [tradingSignals, setTradingSignals] = useState<TradingSignal[]>([])
     const [enhancedTooltipData, setEnhancedTooltipData] = useState<EnhancedTooltipData>({})
+    const [supportResistanceLevels, setSupportResistanceLevels] = useState<SupportResistanceLevel[]>([])
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isSignalModalOpen, setIsSignalModalOpen] = useState(false)
     const [isEnhancedTooltipModalOpen, setIsEnhancedTooltipModalOpen] = useState(false)
+    const [isSupportResistanceModalOpen, setIsSupportResistanceModalOpen] = useState(false)
     const [isSignalPopupOpen, setIsSignalPopupOpen] = useState(false)
     const [selectedSignal, setSelectedSignal] = useState<TradingSignal | null>(null)
     const [selectedDay, setSelectedDay] = useState<number>(-1)
@@ -42,6 +45,11 @@ export default function Home() {
     const handleEnhancedTooltipDataSubmit = (data: EnhancedTooltipData) => {
         setEnhancedTooltipData((prev) => ({ ...prev, ...data }))
         setIsEnhancedTooltipModalOpen(false)
+    }
+
+    const handleSupportResistanceSubmit = (levels: SupportResistanceLevel[]) => {
+        setSupportResistanceLevels((prev) => [...prev, ...levels])
+        setIsSupportResistanceModalOpen(false)
     }
 
     const handleSignalClick = (signal: TradingSignal) => {
@@ -89,8 +97,7 @@ export default function Home() {
     }
 
     const currentSignalsCount = tradingSignals.filter((signal) => {
-        const signalData = signal
-        return chartData.some((candle) => candle.closeTime === signalData?.candlestick.closeTime)
+        return chartData.some((candle) => candle.closeTime === signal.candlestick.closeTime)
     }).length
 
     const enhancedTooltipCount = chartData.filter((candle) => enhancedTooltipData[candle.closeTime.toString()]).length
@@ -108,6 +115,9 @@ export default function Home() {
                 </Button>
                 <Button onClick={() => setIsEnhancedTooltipModalOpen(true)} variant="outline">
                     <Info className="mr-2 h-4 w-4" /> Add Enhanced Tooltip Data
+                </Button>
+                <Button onClick={() => setIsSupportResistanceModalOpen(true)} variant="outline">
+                    <BarChart3 className="mr-2 h-4 w-4" /> Add Support & Resistance
                 </Button>
             </div>
 
@@ -143,6 +153,19 @@ export default function Home() {
                         {currentSignalsCount > 0 && ` (${currentSignalsCount} visible in current view)`}
                     </p>
                     <p className="text-xs text-blue-600 mt-1">Click on candlesticks with arrows to view signal details</p>
+                </div>
+            )}
+
+            {supportResistanceLevels.length > 0 && (
+                <div className="mb-4 p-3 bg-green-50 rounded-lg">
+                    <p className="text-sm text-green-700">
+                        <strong>Support & Resistance:</strong> {supportResistanceLevels.length} levels loaded (
+                        {supportResistanceLevels.filter((l) => l.type === "support").length} support,{" "}
+                        {supportResistanceLevels.filter((l) => l.type === "resistance").length} resistance)
+                    </p>
+                    <p className="text-xs text-green-600 mt-1">
+                        Line thickness represents number of touches. Support lines are solid, resistance lines are dashed.
+                    </p>
                 </div>
             )}
 
@@ -192,6 +215,7 @@ export default function Home() {
                     onSignalClick={handleSignalClick}
                     enhancedTooltipData={enhancedTooltipData}
                     showEnhancedTooltip={showEnhancedTooltip}
+                    supportResistanceLevels={supportResistanceLevels}
                 />
             )}
 
@@ -207,6 +231,12 @@ export default function Home() {
                 isOpen={isEnhancedTooltipModalOpen}
                 onClose={() => setIsEnhancedTooltipModalOpen(false)}
                 onSubmit={handleEnhancedTooltipDataSubmit}
+            />
+
+            <SupportResistanceModal
+                isOpen={isSupportResistanceModalOpen}
+                onClose={() => setIsSupportResistanceModalOpen(false)}
+                onSubmit={handleSupportResistanceSubmit}
             />
 
             <TradingSignalPopup

@@ -44,6 +44,22 @@ export default function CustomTooltip({ active, payload, enhancedData, showEnhan
                             <p className="text-sm text-gray-600">{new Date(data.timestamp).toLocaleString()}</p>
                         </div>
 
+                        {/* Basic Price Data */}
+                        <div className="mb-3 grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                                <span className="font-medium">Open:</span> {data.open}
+                            </div>
+                            <div>
+                                <span className="font-medium">High:</span> {data.high}
+                            </div>
+                            <div>
+                                <span className="font-medium">Low:</span> {data.low}
+                            </div>
+                            <div>
+                                <span className="font-medium">Close:</span> {data.close}
+                            </div>
+                        </div>
+
                         {/* State Information */}
                         {stateInfo && (
                             <div className="border-t pt-2">

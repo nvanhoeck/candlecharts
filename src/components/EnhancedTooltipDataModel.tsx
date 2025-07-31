@@ -25,7 +25,7 @@ export default function EnhancedTooltipDataModal({ isOpen, onClose, onSubmit }: 
         } catch (error) {
             console.error("Invalid JSON:", error)
             alert(
-                'Invalid JSON. Please check your input and try again. Expected format: {"timestamp": {"state": "...", "decision": {...}}}',
+                'Invalid JSON. Please check your input and try again. Expected format: {"timestamp": {"state": "..."}}',
             )
         }
     }
@@ -43,12 +43,6 @@ export default function EnhancedTooltipDataModal({ isOpen, onClose, onSubmit }: 
               {`{
   "1739656799999": {
     "state": "{\\"1h\\":{\\"bollingerBreakout\\":true,...}}",
-    "decision": {
-      "BUY": 0,
-      "HOLD": -0.145,
-      "SELL": 0,
-      "WAIT": 0
-    }
   }
 }`}
             </pre>

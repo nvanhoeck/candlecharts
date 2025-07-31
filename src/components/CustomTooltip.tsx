@@ -44,29 +44,6 @@ export default function CustomTooltip({ active, payload, enhancedData, showEnhan
                             <p className="text-sm text-gray-600">{new Date(data.timestamp).toLocaleString()}</p>
                         </div>
 
-                        {/* Decision Scores */}
-                        <div className="mb-3">
-                            <p className="font-semibold text-sm mb-2">Decision Scores:</p>
-                            <div className="grid grid-cols-2 gap-1 text-xs">
-                                <div className="flex justify-between">
-                                    <span className="text-green-600 font-medium">BUY:</span>
-                                    <span className="font-mono">{enhancedInfo.decision.BUY.toFixed(4)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-blue-600 font-medium">HOLD:</span>
-                                    <span className="font-mono">{enhancedInfo.decision.HOLD.toFixed(4)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-red-600 font-medium">SELL:</span>
-                                    <span className="font-mono">{enhancedInfo.decision.SELL.toFixed(4)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-yellow-600 font-medium">WAIT:</span>
-                                    <span className="font-mono">{enhancedInfo.decision.WAIT.toFixed(4)}</span>
-                                </div>
-                            </div>
-                        </div>
-
                         {/* State Information */}
                         {stateInfo && (
                             <div className="border-t pt-2">

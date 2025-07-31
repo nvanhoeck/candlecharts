@@ -39,12 +39,6 @@ export interface TradingSignal {
 export interface EnhancedTooltipData {
     [closeTime: string]: {
         state: string // JSON string
-        decision: {
-            BUY: number
-            HOLD: number
-            SELL: number
-            WAIT: number
-        }
     }
 }
 

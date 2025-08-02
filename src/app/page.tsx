@@ -4,7 +4,7 @@ import type React from "react"
 import {useEffect, useState} from "react"
 import {Button} from "../components/ui/button"
 import {Switch} from "../components/ui/switch"
-import {BarChart3, Info, PlusIcon, TrendingUp} from "lucide-react"
+import {BarChart3, Info, PlusIcon, Trash2, TrendingUp} from "lucide-react"
 import JsonInputModal from "../components/JsonInputModal"
 import TradingSignalModal from "../components/TradingSignalModal"
 import TradingSignalPopup from "../components/TradingSignalPopup"
@@ -43,7 +43,7 @@ export default function Home() {
     }
 
     const handleEnhancedTooltipDataSubmit = (data: EnhancedTooltipData) => {
-        setEnhancedTooltipData((prev) => ({ ...prev, ...data }))
+        setEnhancedTooltipData((prev) => ({...prev, ...data}))
         setIsEnhancedTooltipModalOpen(false)
     }
 
@@ -70,6 +70,40 @@ export default function Home() {
             const dayData = fullData.slice(Math.max(0, startIndex), endIndex)
             setChartData(dayData)
         }
+    }
+
+    // Clear functions
+    const clearCandlestickData = () => {
+        setChartData([])
+        setFullData([])
+        setSelectedDay(-1)
+        setTimestampInput("")
+        setSelectedTimestamp(null)
+    }
+
+    const clearTradingSignals = () => {
+        setTradingSignals([])
+    }
+
+    const clearEnhancedTooltipData = () => {
+        setEnhancedTooltipData({})
+        setShowEnhancedTooltip(false)
+    }
+
+    const clearSupportResistanceLevels = () => {
+        setSupportResistanceLevels([])
+    }
+
+    const clearAllData = () => {
+        setChartData([])
+        setFullData([])
+        setTradingSignals([])
+        setEnhancedTooltipData({})
+        setSupportResistanceLevels([])
+        setSelectedDay(-1)
+        setTimestampInput("")
+        setSelectedTimestamp(null)
+        setShowEnhancedTooltip(false)
     }
 
     useEffect(() => {
@@ -108,17 +142,49 @@ export default function Home() {
 
             <div className="flex gap-4 mb-4">
                 <Button onClick={() => setIsModalOpen(true)}>
-                    <PlusIcon className="mr-2 h-4 w-4" /> Add Candlestick Data
+                    <PlusIcon className="mr-2 h-4 w-4"/> Add Candlestick Data
                 </Button>
                 <Button onClick={() => setIsSignalModalOpen(true)} variant="outline">
-                    <TrendingUp className="mr-2 h-4 w-4" /> Add Trading Signals
+                    <TrendingUp className="mr-2 h-4 w-4"/> Add Trading Signals
                 </Button>
                 <Button onClick={() => setIsEnhancedTooltipModalOpen(true)} variant="outline">
-                    <Info className="mr-2 h-4 w-4" /> Add Enhanced Tooltip Data
+                    <Info className="mr-2 h-4 w-4"/> Add Enhanced Tooltip Data
                 </Button>
                 <Button onClick={() => setIsSupportResistanceModalOpen(true)} variant="outline">
-                    <BarChart3 className="mr-2 h-4 w-4" /> Add Support & Resistance
+                    <BarChart3 className="mr-2 h-4 w-4"/> Add Support & Resistance
                 </Button>
+            </div>
+
+            {/* Clear Data Buttons */}
+            <div className="flex gap-2 mb-4 flex-wrap">
+                {fullData.length > 0 && (
+                    <Button onClick={clearCandlestickData} variant="destructive" size="sm">
+                        <Trash2 className="mr-1 h-3 w-3"/> Clear Candlestick Data
+                    </Button>
+                )}
+                {tradingSignals.length > 0 && (
+                    <Button onClick={clearTradingSignals} variant="destructive" size="sm">
+                        <Trash2 className="mr-1 h-3 w-3"/> Clear Trading Signals
+                    </Button>
+                )}
+                {Object.keys(enhancedTooltipData).length > 0 && (
+                    <Button onClick={clearEnhancedTooltipData} variant="destructive" size="sm">
+                        <Trash2 className="mr-1 h-3 w-3"/> Clear Enhanced Data
+                    </Button>
+                )}
+                {supportResistanceLevels.length > 0 && (
+                    <Button onClick={clearSupportResistanceLevels} variant="destructive" size="sm">
+                        <Trash2 className="mr-1 h-3 w-3"/> Clear Support & Resistance
+                    </Button>
+                )}
+                {(fullData.length > 0 ||
+                    tradingSignals.length > 0 ||
+                    Object.keys(enhancedTooltipData).length > 0 ||
+                    supportResistanceLevels.length > 0) && (
+                    <Button onClick={clearAllData} variant="destructive" size="sm" className="ml-2">
+                        <Trash2 className="mr-1 h-3 w-3"/> Clear All Data
+                    </Button>
+                )}
             </div>
 
             {/* Enhanced Tooltip Toggle */}
@@ -152,7 +218,8 @@ export default function Home() {
                         <strong>Trading Signals:</strong> {tradingSignals.length} total signals loaded
                         {currentSignalsCount > 0 && ` (${currentSignalsCount} visible in current view)`}
                     </p>
-                    <p className="text-xs text-blue-600 mt-1">Click on candlesticks with arrows to view signal details</p>
+                    <p className="text-xs text-blue-600 mt-1">Click on candlesticks with arrows to view signal
+                        details</p>
                 </div>
             )}
 
@@ -164,7 +231,8 @@ export default function Home() {
                         {supportResistanceLevels.filter((l) => l.type === "resistance").length} resistance)
                     </p>
                     <p className="text-xs text-green-600 mt-1">
-                        Line thickness represents number of touches. Support lines are solid, resistance lines are dashed.
+                        Line thickness represents number of touches. Support lines are solid, resistance lines are
+                        dashed.
                     </p>
                 </div>
             )}
@@ -186,7 +254,7 @@ export default function Home() {
                     <label className="mr-2 font-semibold">Select Day:</label>
                     <select value={selectedDay} onChange={handleDayChange} className="p-2 border rounded">
                         <option value={-1}>All Data ({fullData.length} points)</option>
-                        {Array.from({ length: availableDays }, (_, i) => {
+                        {Array.from({length: availableDays}, (_, i) => {
                             const dataPointsPerDay = Math.min(288, Math.ceil(fullData.length / availableDays))
                             const startIndex = Math.max(0, fullData.length - dataPointsPerDay * (i + 1))
                             const endIndex = Math.min(fullData.length, startIndex + dataPointsPerDay)
@@ -219,7 +287,7 @@ export default function Home() {
                 />
             )}
 
-            <JsonInputModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleJsonSubmit} />
+            <JsonInputModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleJsonSubmit}/>
 
             <TradingSignalModal
                 isOpen={isSignalModalOpen}

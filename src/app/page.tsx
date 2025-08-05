@@ -4,13 +4,21 @@ import type React from "react"
 import {useEffect, useState} from "react"
 import {Button} from "../components/ui/button"
 import {Switch} from "../components/ui/switch"
-import {BarChart3, Info, PlusIcon, Trash2, TrendingUp} from "lucide-react"
+import {Activity, BarChart3, Info, PlusIcon, Trash2, TrendingUp} from "lucide-react"
 import JsonInputModal from "../components/JsonInputModal"
 import TradingSignalModal from "../components/TradingSignalModal"
+import SupportResistanceModal from "../components/SupportResistanceModal"
+import ZoneTrendModal from "../components/ZoneTrendModal" // New import
 import TradingSignalPopup from "../components/TradingSignalPopup"
-import type {CandlestickData, EnhancedTooltipData, SupportResistanceLevel, TradingSignal} from "../app/types"
+import ZoneTrendPopup from "../components/ZoneTrendPopup" // New import
+import type {
+    CandlestickData,
+    EnhancedTooltipData,
+    SupportResistanceLevel,
+    TradingSignal,
+    ZoneTrend,
+} from "../app/types"
 import {CandlestickChart} from "../components/CandlestickChart"
-import SupportResistanceModal from "../components/SupportResistanceModal";
 import EnhancedTooltipDataModal from "../components/EnhancedTooltipDataModel";
 
 export default function Home() {
@@ -19,12 +27,16 @@ export default function Home() {
     const [tradingSignals, setTradingSignals] = useState<TradingSignal[]>([])
     const [enhancedTooltipData, setEnhancedTooltipData] = useState<EnhancedTooltipData>({})
     const [supportResistanceLevels, setSupportResistanceLevels] = useState<SupportResistanceLevel[]>([])
+    const [zoneTrends, setZoneTrends] = useState<ZoneTrend[]>([]) // New state
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isSignalModalOpen, setIsSignalModalOpen] = useState(false)
     const [isEnhancedTooltipModalOpen, setIsEnhancedTooltipModalOpen] = useState(false)
     const [isSupportResistanceModalOpen, setIsSupportResistanceModalOpen] = useState(false)
+    const [isZoneTrendModalOpen, setIsZoneTrendModalOpen] = useState(false) // New modal state
     const [isSignalPopupOpen, setIsSignalPopupOpen] = useState(false)
+    const [isZoneTrendPopupOpen, setIsZoneTrendPopupOpen] = useState(false) // New popup state
     const [selectedSignal, setSelectedSignal] = useState<TradingSignal | null>(null)
+    const [selectedZoneTrend, setSelectedZoneTrend] = useState<ZoneTrend | null>(null) // New selected trend state
     const [selectedDay, setSelectedDay] = useState<number>(-1)
     const [timestampInput, setTimestampInput] = useState<string>("")
     const [selectedTimestamp, setSelectedTimestamp] = useState<number | null>(null)
@@ -43,7 +55,7 @@ export default function Home() {
     }
 
     const handleEnhancedTooltipDataSubmit = (data: EnhancedTooltipData) => {
-        setEnhancedTooltipData((prev) => ({...prev, ...data}))
+        setEnhancedTooltipData((prev) => ({ ...prev, ...data }))
         setIsEnhancedTooltipModalOpen(false)
     }
 
@@ -52,9 +64,21 @@ export default function Home() {
         setIsSupportResistanceModalOpen(false)
     }
 
+    const handleZoneTrendSubmit = (trends: ZoneTrend[]) => {
+        // New submit handler
+        setZoneTrends((prev) => [...prev, ...trends])
+        setIsZoneTrendModalOpen(false)
+    }
+
     const handleSignalClick = (signal: TradingSignal) => {
         setSelectedSignal(signal)
         setIsSignalPopupOpen(true)
+    }
+
+    const handleZoneTrendClick = (trend: ZoneTrend) => {
+        // New click handler
+        setSelectedZoneTrend(trend)
+        setIsZoneTrendPopupOpen(true)
     }
 
     const handleDayChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -64,7 +88,7 @@ export default function Home() {
         if (dayIndex === -1) {
             setChartData(fullData)
         } else {
-            const dataPointsPerDay = Math.min(288, Math.ceil(fullData.length / availableDays))
+            const dataPointsPerDay = Math.min(250, Math.ceil(fullData.length / availableDays))
             const startIndex = fullData.length - dataPointsPerDay * (dayIndex + 1)
             const endIndex = startIndex + dataPointsPerDay
             const dayData = fullData.slice(Math.max(0, startIndex), endIndex)
@@ -123,7 +147,7 @@ export default function Home() {
         }
     }, [timestampInput, fullData])
 
-    const availableDays = Math.floor(fullData.length / 288)
+    const availableDays = Math.floor(fullData.length / 250)
 
     const formatDate = (epoch: number) => {
         const date = new Date(epoch)
@@ -134,6 +158,10 @@ export default function Home() {
         return chartData.some((candle) => candle.closeTime === signal.candlestick.closeTime)
     }).length
 
+    const currentTrendsCount = zoneTrends.filter((trend) => {
+        return chartData.some((candle) => candle.closeTime === trend.timestampOfSwing)
+    }).length
+
     const enhancedTooltipCount = chartData.filter((candle) => enhancedTooltipData[candle.closeTime.toString()]).length
 
     return (
@@ -142,16 +170,21 @@ export default function Home() {
 
             <div className="flex gap-4 mb-4">
                 <Button onClick={() => setIsModalOpen(true)}>
-                    <PlusIcon className="mr-2 h-4 w-4"/> Add Candlestick Data
+                    <PlusIcon className="mr-2 h-4 w-4" /> Add Candlestick Data
                 </Button>
                 <Button onClick={() => setIsSignalModalOpen(true)} variant="outline">
-                    <TrendingUp className="mr-2 h-4 w-4"/> Add Trading Signals
+                    <TrendingUp className="mr-2 h-4 w-4" /> Add Trading Signals
                 </Button>
                 <Button onClick={() => setIsEnhancedTooltipModalOpen(true)} variant="outline">
-                    <Info className="mr-2 h-4 w-4"/> Add Enhanced Tooltip Data
+                    <Info className="mr-2 h-4 w-4" /> Add Enhanced Tooltip Data
                 </Button>
                 <Button onClick={() => setIsSupportResistanceModalOpen(true)} variant="outline">
-                    <BarChart3 className="mr-2 h-4 w-4"/> Add Support & Resistance
+                    <BarChart3 className="mr-2 h-4 w-4" /> Add Support & Resistance
+                </Button>
+                <Button onClick={() => setIsZoneTrendModalOpen(true)} variant="outline">
+                    {" "}
+                    {/* New button */}
+                    <Activity className="mr-2 h-4 w-4" /> Add Trends
                 </Button>
             </div>
 
@@ -218,8 +251,17 @@ export default function Home() {
                         <strong>Trading Signals:</strong> {tradingSignals.length} total signals loaded
                         {currentSignalsCount > 0 && ` (${currentSignalsCount} visible in current view)`}
                     </p>
-                    <p className="text-xs text-blue-600 mt-1">Click on candlesticks with arrows to view signal
-                        details</p>
+                    <p className="text-xs text-blue-600 mt-1">Click on candlesticks with arrows to view signal details</p>
+                </div>
+            )}
+
+            {zoneTrends.length > 0 && (
+                <div className="mb-4 p-3 bg-purple-50 rounded-lg">
+                    <p className="text-sm text-purple-700">
+                        <strong>Trends:</strong> {zoneTrends.length} total trends loaded
+                        {currentTrendsCount > 0 && ` (${currentTrendsCount} visible in current view)`}
+                    </p>
+                    <p className="text-xs text-purple-600 mt-1">Click on candlesticks with arrows to view trend details</p>
                 </div>
             )}
 
@@ -231,8 +273,7 @@ export default function Home() {
                         {supportResistanceLevels.filter((l) => l.type === "resistance").length} resistance)
                     </p>
                     <p className="text-xs text-green-600 mt-1">
-                        Line thickness represents number of touches. Support lines are solid, resistance lines are
-                        dashed.
+                        Line thickness represents number of touches. Support lines are solid, resistance lines are dashed.
                     </p>
                 </div>
             )}
@@ -249,14 +290,14 @@ export default function Home() {
                 </div>
             )}
 
-            {fullData.length >= 288 && (
+            {fullData.length >= 250 && (
                 <div className="mb-4">
                     <label className="mr-2 font-semibold">Select Day:</label>
                     <select value={selectedDay} onChange={handleDayChange} className="p-2 border rounded">
                         <option value={-1}>All Data ({fullData.length} points)</option>
-                        {Array.from({length: availableDays}, (_, i) => {
-                            const dataPointsPerDay = Math.min(288, Math.ceil(fullData.length / availableDays))
-                            const startIndex = Math.max(0, fullData.length - dataPointsPerDay * (i + 1))
+                        {Array.from({ length: availableDays }, (_, i) => {
+                            const dataPointsPerDay = Math.min(250, Math.ceil(fullData.length / availableDays))
+                            const startIndex = fullData.length - dataPointsPerDay * (i + 1)
                             const endIndex = Math.min(fullData.length, startIndex + dataPointsPerDay)
 
                             if (startIndex < fullData.length && endIndex > startIndex) {
@@ -284,10 +325,12 @@ export default function Home() {
                     enhancedTooltipData={enhancedTooltipData}
                     showEnhancedTooltip={showEnhancedTooltip}
                     supportResistanceLevels={supportResistanceLevels}
+                    zoneTrends={zoneTrends} // Pass new trend data
+                    onZoneTrendClick={handleZoneTrendClick} // Pass new click handler
                 />
             )}
 
-            <JsonInputModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleJsonSubmit}/>
+            <JsonInputModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleJsonSubmit} />
 
             <TradingSignalModal
                 isOpen={isSignalModalOpen}
@@ -307,10 +350,22 @@ export default function Home() {
                 onSubmit={handleSupportResistanceSubmit}
             />
 
+            <ZoneTrendModal // New modal component
+                isOpen={isZoneTrendModalOpen}
+                onClose={() => setIsZoneTrendModalOpen(false)}
+                onSubmit={handleZoneTrendSubmit}
+            />
+
             <TradingSignalPopup
                 isOpen={isSignalPopupOpen}
                 onClose={() => setIsSignalPopupOpen(false)}
                 signal={selectedSignal}
+            />
+
+            <ZoneTrendPopup // New popup component
+                isOpen={isZoneTrendPopupOpen}
+                onClose={() => setIsZoneTrendPopupOpen(false)}
+                trend={selectedZoneTrend}
             />
         </main>
     )

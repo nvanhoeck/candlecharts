@@ -17,11 +17,11 @@ type TooltipData = {
 }
 
 interface CustomTooltipProps extends TooltipProps<number, string> {
-    enhancedData?: EnhancedTooltipData
-    showEnhancedTooltip?: boolean
+    enhancedData?: EnhancedTooltipData,
+    showEnhancedTooltip?: boolean,
 }
 
-export default function CustomTooltip({ active, payload, enhancedData, showEnhancedTooltip }: CustomTooltipProps) {
+export default function CustomTooltip({active, payload, enhancedData, showEnhancedTooltip}: CustomTooltipProps) {
     if (active && payload && payload.length) {
         const data = payload[0].payload as TooltipData
 
@@ -38,7 +38,7 @@ export default function CustomTooltip({ active, payload, enhancedData, showEnhan
                 }
 
                 return (
-                    <div className="bg-white p-4 rounded shadow-md border max-w-md">
+                    <div className="bg-white p-4 rounded shadow-md border w-full">
                         <div className="mb-3">
                             <p className="font-bold text-lg">Enhanced Data</p>
                             <p className="text-sm text-gray-600">{new Date(data.timestamp).toLocaleString()}</p>
@@ -70,7 +70,7 @@ export default function CustomTooltip({ active, payload, enhancedData, showEnhan
                                             <p className="font-medium text-xs text-blue-700 mb-1">{timeframe}</p>
                                             <div className="grid grid-cols-1 gap-1 text-xs">
                                                 {Object.entries(stateData)
-                                                    .slice(0, 6)
+                                                    // .slice(0, 6)
                                                     .map(([key, value]) => (
                                                         <div key={key} className="flex justify-between">
                                                             <span className="text-gray-600 truncate">{key}:</span>
@@ -87,11 +87,11 @@ export default function CustomTooltip({ active, payload, enhancedData, showEnhan
                               </span>
                                                         </div>
                                                     ))}
-                                                {Object.keys(stateData).length > 6 && (
-                                                    <div className="text-xs text-gray-500 italic">
-                                                        +{Object.keys(stateData).length - 6} more...
-                                                    </div>
-                                                )}
+                                                {/*{Object.keys(stateData).length > 6 && (*/}
+                                                {/*    <div className="text-xs text-gray-500 italic">*/}
+                                                {/*        +{Object.keys(stateData).length - 6} more...*/}
+                                                {/*    </div>*/}
+                                                {/*)}*/}
                                             </div>
                                         </div>
                                     ))}

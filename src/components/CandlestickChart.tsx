@@ -1,7 +1,13 @@
 "use client"
 
 import {Bar, BarChart, Cell, ReferenceDot, ReferenceLine, Tooltip, XAxis, YAxis} from "recharts"
-import type {CandlestickData, EnhancedTooltipData, SupportResistanceLevel, TradingSignal} from "@/src/app/types"
+import type {
+    CandlestickData,
+    EnhancedTooltipData,
+    SupportResistanceLevel,
+    TradingSignal,
+    ZoneTrend,
+} from "@/src/app/types"
 import {useCallback, useEffect, useRef, useState} from "react"
 import type {CategoricalChartFunc} from "recharts/types/chart/generateCategoricalChart"
 import CustomTooltip from "./CustomTooltip"
@@ -15,35 +21,61 @@ type StockData = {
     high: string
     low: string
     highLow: [string, string]
-    signalType?: "BUY" | "SELL"
+    signalType?: "BUY" | "SELL" // For trading signals
     hasSignal?: boolean
-    signalPrice?: number
+    signalPrice?: number // Position for trading signal arrow
+    trendDirection?: "UP" | "DOWN" // For zone trends
+    hasTrend?: boolean
+    trendPrice?: number // Position for trend arrow
 }
 
-// Custom arrow component for signals
-const SignalArrow = (props: any) => {
+// Custom arrow component for signals and trends
+const ArrowShape = (props: any) => {
     const { cx, cy, payload } = props
 
-    if (!payload || !payload.hasSignal) return null
+    // Determine if it's a trading signal or a trend
+    const isTradingSignal = payload.hasSignal && payload.signalType
+    const isTrend = payload.hasTrend && payload.trendDirection
 
-    const isBuy = payload.signalType === "BUY"
+    if (!isTradingSignal && !isTrend) return null
+
+    let color = ""
+    let direction = ""
+    let offset = 0 // Vertical offset for the arrow
+
+    if (isTradingSignal) {
+        color = payload.signalType === "BUY" ? "#22c55e" : "#ef4444"
+        direction = payload.signalType === "BUY" ? "UP" : "DOWN"
+        offset = direction === "UP" ? -20 : 20 // Above for BUY, below for SELL
+    } else if (isTrend) {
+        color = payload.trendDirection === "UP" ? "#22c55e" : "#ef4444"
+        direction = payload.trendDirection === "UP" ? "UP" : "DOWN"
+        offset = direction === "UP" ? -20 : 20 // Above for UP trend, below for DOWN trend
+    }
+
     const arrowSize = 8
 
     return (
         <g>
             <circle
                 cx={cx}
-                cy={cy - 20}
+                cy={cy + offset}
                 r={arrowSize}
-                fill={isBuy ? "#22c55e" : "#ef4444"}
+                fill={color}
                 stroke="white"
                 strokeWidth="2"
                 style={{ cursor: "pointer" }}
             />
-            {isBuy ? (
-                <polygon points={`${cx - 4},${cy - 18} ${cx + 4},${cy - 18} ${cx},${cy - 24}`} fill="white" />
+            {direction === "UP" ? (
+                <polygon
+                    points={`${cx - 4},${cy + offset + 2} ${cx + 4},${cy + offset + 2} ${cx},${cy + offset - 4}`}
+                    fill="white"
+                />
             ) : (
-                <polygon points={`${cx - 4},${cy - 22} ${cx + 4},${cy - 22} ${cx},${cy - 16}`} fill="white" />
+                <polygon
+                    points={`${cx - 4},${cy + offset - 2} ${cx + 4},${cy + offset - 2} ${cx},${cy + offset + 4}`}
+                    fill="white"
+                />
             )}
         </g>
     )
@@ -58,18 +90,29 @@ export const CandlestickChart = (props: {
     enhancedTooltipData?: EnhancedTooltipData
     showEnhancedTooltip?: boolean
     supportResistanceLevels?: SupportResistanceLevel[]
+    zoneTrends?: ZoneTrend[]
+    onZoneTrendClick: (trend: ZoneTrend) => void
 }) => {
-    const data: StockData[] = props.data.map((stock) => {
+    const data: StockData[] = props.data.map((stock, index) => {
         // Find if there's a trading signal for this timestamp
-        const signal = props.tradingSignals.find((signal) => {
-            return signal.candlestick.closeTime === stock.closeTime
-        })
+        const signal = props.tradingSignals.find((s) => s.candlestick.closeTime === stock.closeTime)
+
+        // Find if there's a zone trend for this timestamp
+        const trend = props.zoneTrends?.find((t) => t.timestampOfSwing === stock.closeTime)
 
         const high = Number.parseFloat(stock.high)
-        const signalPrice = signal ? high + high * 0.02 : undefined
+        const low = Number.parseFloat(stock.low)
+
+        // Calculate arrow positions
+        const signalPrice = signal ? high + high * 0.02 : undefined // Above candle for signals
+        const trendPrice = trend
+            ? trend.direction === "UP"
+                ? high + high * 0.02 // Above candle for UP trend
+                : low - low * 0.02 // Below candle for DOWN trend
+            : undefined
 
         return {
-            time: new Date(stock.closeTime).toLocaleString(),
+            time: new Date(stock.closeTime).toLocaleString() + `(${index})`,
             timestamp: stock.closeTime,
             open: stock.open,
             close: stock.close,
@@ -80,6 +123,9 @@ export const CandlestickChart = (props: {
             signalType: signal ? signal.action : undefined,
             hasSignal: !!signal,
             signalPrice: signalPrice,
+            trendDirection: trend ? trend.direction : undefined,
+            hasTrend: !!trend,
+            trendPrice: trendPrice,
         }
     })
 
@@ -102,18 +148,24 @@ export const CandlestickChart = (props: {
         (e) => {
             const timestamp = e.activePayload![0].payload.timestamp
 
-            // Check if this candlestick has a trading signal
-            const signal = props.tradingSignals.find((signal) => {
-                return signal.candlestick.closeTime === timestamp
-            })
-
+            // Prioritize trading signal click
+            const signal = props.tradingSignals.find((s) => s.candlestick.closeTime === timestamp)
             if (signal) {
                 props.onSignalClick(signal)
-            } else {
-                props.selectTimestamp(timestamp)
+                return
             }
+
+            // Then check for zone trend click
+            const trend = props.zoneTrends?.find((t) => t.timestampOfSwing === timestamp)
+            if (trend) {
+                props.onZoneTrendClick(trend)
+                return
+            }
+
+            // Default to selecting timestamp if no signal or trend
+            props.selectTimestamp(timestamp)
         },
-        [props.tradingSignals, props.onSignalClick, props.selectTimestamp],
+        [props.tradingSignals, props.onSignalClick, props.zoneTrends, props.onZoneTrendClick, props.selectTimestamp],
     )
 
     return (
@@ -160,13 +212,13 @@ export const CandlestickChart = (props: {
                             stroke={
                                 props.selectedTimestamp && entry.timestamp === props.selectedTimestamp
                                     ? "#ff00ff"
-                                    : entry.hasSignal
-                                        ? entry.signalType === "BUY"
+                                    : entry.hasSignal || entry.hasTrend
+                                        ? entry.signalType === "BUY" || entry.trendDirection === "UP"
                                             ? "#22c55e"
                                             : "#ef4444"
                                         : ""
                             }
-                            strokeWidth={entry.hasSignal ? 3 : 1}
+                            strokeWidth={entry.hasSignal || entry.hasTrend ? 3 : 1}
                         />
                     ))}
                 </Bar>
@@ -178,7 +230,7 @@ export const CandlestickChart = (props: {
                     ))}
                 </Bar>
 
-                {/* Signal arrows using ReferenceDot */}
+                {/* Trading Signal arrows using ReferenceDot */}
                 {data.map((entry, index) => {
                     if (!entry.hasSignal || !entry.signalPrice) return null
 
@@ -187,12 +239,28 @@ export const CandlestickChart = (props: {
                             key={`signal-${index}`}
                             x={entry.time}
                             y={entry.signalPrice}
-                            shape={(props: any) => <SignalArrow {...props} payload={entry} />}
+                            shape={(props: any) => <ArrowShape {...props} payload={entry} />}
                             onClick={() => {
-                                const signal = props.tradingSignals.find((signal) => {
-                                    return signal.candlestick.closeTime === entry.timestamp
-                                })
+                                const signal = props.tradingSignals.find((s) => s.candlestick.closeTime === entry.timestamp)
                                 if (signal) props.onSignalClick(signal)
+                            }}
+                        />
+                    )
+                })}
+
+                {/* Zone Trend arrows using ReferenceDot */}
+                {data.map((entry, index) => {
+                    if (!entry.hasTrend || !entry.trendPrice) return null
+
+                    return (
+                        <ReferenceDot
+                            key={`trend-${index}`}
+                            x={entry.time}
+                            y={entry.trendPrice}
+                            shape={(props: any) => <ArrowShape {...props} payload={entry} />}
+                            onClick={() => {
+                                const trend = props.zoneTrends?.find((t) => t.timestampOfSwing === entry.timestamp)
+                                if (trend) props.onZoneTrendClick(trend)
                             }}
                         />
                     )

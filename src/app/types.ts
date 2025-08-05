@@ -39,6 +39,7 @@ export interface SupportResistanceLevel {
     type: "support" | "resistance"
     price: number
     touches: number
+    score: number
 }
 
 
@@ -61,4 +62,16 @@ export interface EnhancedCandlestickData {
     baseAssetVolume: string
     quoteAssetVolume: string
     stateData: string
+}
+
+export interface ZoneTrend {
+    close: number
+    low: number
+    high: number
+    maxPercentageChange: number
+    direction: "UP" | "DOWN"
+    currentRetracement: number
+    zoneSwingIndex: number
+    supportResistanceTouches: number
+    timestampOfSwing: number
 }

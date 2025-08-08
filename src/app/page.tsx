@@ -4,7 +4,7 @@ import type React from "react"
 import {useEffect, useState} from "react"
 import {Button} from "../components/ui/button"
 import {Switch} from "../components/ui/switch"
-import {Activity, BarChart3, Info, PlusIcon, Trash2, TrendingUp} from "lucide-react"
+import {Activity, BarChart3, Info, PlusIcon, Timer, Trash2, TrendingUp} from "lucide-react"
 import JsonInputModal from "../components/JsonInputModal"
 import TradingSignalModal from "../components/TradingSignalModal"
 import SupportResistanceModal from "../components/SupportResistanceModal"
@@ -20,6 +20,7 @@ import type {
 } from "../app/types"
 import {CandlestickChart} from "../components/CandlestickChart"
 import EnhancedTooltipDataModal from "../components/EnhancedTooltipDataModel";
+import TimePlotModal from "../components/TimePlotModal";
 
 export default function Home() {
     const [chartData, setChartData] = useState<CandlestickData[]>([])
@@ -28,6 +29,7 @@ export default function Home() {
     const [enhancedTooltipData, setEnhancedTooltipData] = useState<EnhancedTooltipData>({})
     const [supportResistanceLevels, setSupportResistanceLevels] = useState<SupportResistanceLevel[]>([])
     const [zoneTrends, setZoneTrends] = useState<ZoneTrend[]>([]) // New state
+    const [timePlots, setTimePlots] = useState<number[]>([])
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [isSignalModalOpen, setIsSignalModalOpen] = useState(false)
     const [isEnhancedTooltipModalOpen, setIsEnhancedTooltipModalOpen] = useState(false)
@@ -35,6 +37,7 @@ export default function Home() {
     const [isZoneTrendModalOpen, setIsZoneTrendModalOpen] = useState(false) // New modal state
     const [isSignalPopupOpen, setIsSignalPopupOpen] = useState(false)
     const [isZoneTrendPopupOpen, setIsZoneTrendPopupOpen] = useState(false) // New popup state
+    const [isTimePlotModalOpen, setIsTimePlotModalOpen] = useState(false)
     const [selectedSignal, setSelectedSignal] = useState<TradingSignal | null>(null)
     const [selectedZoneTrend, setSelectedZoneTrend] = useState<ZoneTrend | null>(null) // New selected trend state
     const [selectedDay, setSelectedDay] = useState<number>(-1)
@@ -55,7 +58,7 @@ export default function Home() {
     }
 
     const handleEnhancedTooltipDataSubmit = (data: EnhancedTooltipData) => {
-        setEnhancedTooltipData((prev) => ({ ...prev, ...data }))
+        setEnhancedTooltipData((prev) => ({...prev, ...data}))
         setIsEnhancedTooltipModalOpen(false)
     }
 
@@ -79,6 +82,10 @@ export default function Home() {
         // New click handler
         setSelectedZoneTrend(trend)
         setIsZoneTrendPopupOpen(true)
+    }
+
+    const handleTimePlotClick = (timePlots: number[]) => {
+        setTimePlots(timePlots)
     }
 
     const handleDayChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -118,6 +125,14 @@ export default function Home() {
         setSupportResistanceLevels([])
     }
 
+    const clearZoneTrends = () => {
+        setZoneTrends([])
+    }
+
+    const clearTimePlots = () => {
+        setTimePlots([])
+    }
+
     const clearAllData = () => {
         setChartData([])
         setFullData([])
@@ -128,6 +143,7 @@ export default function Home() {
         setTimestampInput("")
         setSelectedTimestamp(null)
         setShowEnhancedTooltip(false)
+        setTimePlots([])
     }
 
     useEffect(() => {
@@ -170,21 +186,26 @@ export default function Home() {
 
             <div className="flex gap-4 mb-4">
                 <Button onClick={() => setIsModalOpen(true)}>
-                    <PlusIcon className="mr-2 h-4 w-4" /> Add Candlestick Data
+                    <PlusIcon className="mr-2 h-4 w-4"/> Add Candlestick Data
                 </Button>
                 <Button onClick={() => setIsSignalModalOpen(true)} variant="outline">
-                    <TrendingUp className="mr-2 h-4 w-4" /> Add Trading Signals
+                    <TrendingUp className="mr-2 h-4 w-4"/> Add Trading Signals
                 </Button>
                 <Button onClick={() => setIsEnhancedTooltipModalOpen(true)} variant="outline">
-                    <Info className="mr-2 h-4 w-4" /> Add Enhanced Tooltip Data
+                    <Info className="mr-2 h-4 w-4"/> Add Enhanced Tooltip Data
                 </Button>
                 <Button onClick={() => setIsSupportResistanceModalOpen(true)} variant="outline">
-                    <BarChart3 className="mr-2 h-4 w-4" /> Add Support & Resistance
+                    <BarChart3 className="mr-2 h-4 w-4"/> Add Support & Resistance
                 </Button>
                 <Button onClick={() => setIsZoneTrendModalOpen(true)} variant="outline">
                     {" "}
                     {/* New button */}
-                    <Activity className="mr-2 h-4 w-4" /> Add Trends
+                    <Activity className="mr-2 h-4 w-4"/> Add Trends
+                </Button>
+                <Button onClick={() => setIsTimePlotModalOpen(true)} variant="outline">
+                    {" "}
+                    {/* New button */}
+                    <Timer className="mr-2 h-4 w-4"/> Add Time plots
                 </Button>
             </div>
 
@@ -208,6 +229,16 @@ export default function Home() {
                 {supportResistanceLevels.length > 0 && (
                     <Button onClick={clearSupportResistanceLevels} variant="destructive" size="sm">
                         <Trash2 className="mr-1 h-3 w-3"/> Clear Support & Resistance
+                    </Button>
+                )}
+                {zoneTrends.length > 0 && (
+                    <Button onClick={clearZoneTrends} variant="destructive" size="sm">
+                        <Trash2 className="mr-1 h-3 w-3"/> Clear Zone Trends
+                    </Button>
+                )}
+                {timePlots.length > 0 && (
+                    <Button onClick={clearTimePlots} variant="destructive" size="sm">
+                        <Trash2 className="mr-1 h-3 w-3"/> Clear Time Plots
                     </Button>
                 )}
                 {(fullData.length > 0 ||
@@ -251,7 +282,8 @@ export default function Home() {
                         <strong>Trading Signals:</strong> {tradingSignals.length} total signals loaded
                         {currentSignalsCount > 0 && ` (${currentSignalsCount} visible in current view)`}
                     </p>
-                    <p className="text-xs text-blue-600 mt-1">Click on candlesticks with arrows to view signal details</p>
+                    <p className="text-xs text-blue-600 mt-1">Click on candlesticks with arrows to view signal
+                        details</p>
                 </div>
             )}
 
@@ -261,7 +293,8 @@ export default function Home() {
                         <strong>Trends:</strong> {zoneTrends.length} total trends loaded
                         {currentTrendsCount > 0 && ` (${currentTrendsCount} visible in current view)`}
                     </p>
-                    <p className="text-xs text-purple-600 mt-1">Click on candlesticks with arrows to view trend details</p>
+                    <p className="text-xs text-purple-600 mt-1">Click on candlesticks with arrows to view trend
+                        details</p>
                 </div>
             )}
 
@@ -273,7 +306,8 @@ export default function Home() {
                         {supportResistanceLevels.filter((l) => l.type === "resistance").length} resistance)
                     </p>
                     <p className="text-xs text-green-600 mt-1">
-                        Line thickness represents number of touches. Support lines are solid, resistance lines are dashed.
+                        Line thickness represents number of touches. Support lines are solid, resistance lines are
+                        dashed.
                     </p>
                 </div>
             )}
@@ -295,7 +329,7 @@ export default function Home() {
                     <label className="mr-2 font-semibold">Select Day:</label>
                     <select value={selectedDay} onChange={handleDayChange} className="p-2 border rounded">
                         <option value={-1}>All Data ({fullData.length} points)</option>
-                        {Array.from({ length: availableDays }, (_, i) => {
+                        {Array.from({length: availableDays}, (_, i) => {
                             const dataPointsPerDay = Math.min(250, Math.ceil(fullData.length / availableDays))
                             const startIndex = fullData.length - dataPointsPerDay * (i + 1)
                             const endIndex = Math.min(fullData.length, startIndex + dataPointsPerDay)
@@ -327,10 +361,11 @@ export default function Home() {
                     supportResistanceLevels={supportResistanceLevels}
                     zoneTrends={zoneTrends} // Pass new trend data
                     onZoneTrendClick={handleZoneTrendClick} // Pass new click handler
+                    timePlots={timePlots}
                 />
             )}
 
-            <JsonInputModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleJsonSubmit} />
+            <JsonInputModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={handleJsonSubmit}/>
 
             <TradingSignalModal
                 isOpen={isSignalModalOpen}
@@ -355,6 +390,9 @@ export default function Home() {
                 onClose={() => setIsZoneTrendModalOpen(false)}
                 onSubmit={handleZoneTrendSubmit}
             />
+
+            <TimePlotModal isOpen={isTimePlotModalOpen} onClose={() => setIsTimePlotModalOpen(false)}
+                           onSubmit={setTimePlots}/>
 
             <TradingSignalPopup
                 isOpen={isSignalPopupOpen}

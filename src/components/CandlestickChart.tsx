@@ -27,6 +27,7 @@ type StockData = {
     trendDirection?: "UP" | "DOWN" // For zone trends
     hasTrend?: boolean
     trendPrice?: number // Position for trend arrow
+    timePlotPrice?: number // Position for trend arrow
 }
 
 // Custom arrow component for signals and trends
@@ -36,8 +37,9 @@ const ArrowShape = (props: any) => {
     // Determine if it's a trading signal or a trend
     const isTradingSignal = payload.hasSignal && payload.signalType
     const isTrend = payload.hasTrend && payload.trendDirection
+    const isTimePlot = payload.timePlotPrice
 
-    if (!isTradingSignal && !isTrend) return null
+    if (!isTradingSignal && !isTrend && !isTimePlot) return null
 
     let color = ""
     let direction = ""
@@ -51,6 +53,10 @@ const ArrowShape = (props: any) => {
         color = payload.trendDirection === "UP" ? "#22c55e" : "#ef4444"
         direction = payload.trendDirection === "UP" ? "UP" : "DOWN"
         offset = direction === "UP" ? -20 : 20 // Above for UP trend, below for DOWN trend
+    } else if (isTimePlot) {
+        color = "#9c17aa"
+        direction = "UP"
+        offset = 10 // Above for UP trend, below for DOWN trend
     }
 
     const arrowSize = 8
@@ -82,16 +88,17 @@ const ArrowShape = (props: any) => {
 }
 
 export const CandlestickChart = (props: {
-    data: CandlestickData[]
-    selectedTimestamp: number | null
-    selectTimestamp: (timestamp: number) => void
-    tradingSignals: TradingSignal[]
-    onSignalClick: (signal: TradingSignal) => void
-    enhancedTooltipData?: EnhancedTooltipData
-    showEnhancedTooltip?: boolean
-    supportResistanceLevels?: SupportResistanceLevel[]
-    zoneTrends?: ZoneTrend[]
-    onZoneTrendClick: (trend: ZoneTrend) => void
+    data: CandlestickData[],
+    selectedTimestamp: number | null,
+    selectTimestamp: (timestamp: number) => void,
+    tradingSignals: TradingSignal[],
+    onSignalClick: (signal: TradingSignal) => void,
+    enhancedTooltipData?: EnhancedTooltipData,
+    showEnhancedTooltip?: boolean,
+    supportResistanceLevels?: SupportResistanceLevel[],
+    zoneTrends?: ZoneTrend[],
+    onZoneTrendClick: (trend: ZoneTrend) => void,
+    timePlots?: number[]
 }) => {
     const data: StockData[] = props.data.map((stock, index) => {
         // Find if there's a trading signal for this timestamp
@@ -99,6 +106,8 @@ export const CandlestickChart = (props: {
 
         // Find if there's a zone trend for this timestamp
         const trend = props.zoneTrends?.find((t) => t.timestampOfSwing === stock.closeTime)
+
+        const timePlot = props.timePlots?.find((t) => String(t) === String(stock.closeTime))
 
         const high = Number.parseFloat(stock.high)
         const low = Number.parseFloat(stock.low)
@@ -110,6 +119,8 @@ export const CandlestickChart = (props: {
                 ? high + high * 0.02 // Above candle for UP trend
                 : low - low * 0.02 // Below candle for DOWN trend
             : undefined
+
+        const timePlotPrice = timePlot ? high + high * 0.02 : undefined
 
         return {
             time: new Date(stock.closeTime).toLocaleString() + `(${index})`,
@@ -126,6 +137,7 @@ export const CandlestickChart = (props: {
             trendDirection: trend ? trend.direction : undefined,
             hasTrend: !!trend,
             trendPrice: trendPrice,
+            timePlotPrice: timePlotPrice
         }
     })
 
@@ -265,6 +277,21 @@ export const CandlestickChart = (props: {
                         />
                     )
                 })}
+
+                {/* Time plot arrows using ReferenceDot */}
+                {data.map((entry, index) => {
+                    if (!entry.timePlotPrice) return null
+
+                    return (
+                        <ReferenceDot
+                            key={`time plot-${index}`}
+                            x={entry.time}
+                            y={entry.timePlotPrice}
+                            shape={(props: any) => <ArrowShape {...props} payload={entry} />}
+                        />
+                    )
+                })}
+
             </BarChart>
         </div>
     )
